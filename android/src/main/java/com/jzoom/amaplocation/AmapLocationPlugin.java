@@ -154,6 +154,9 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
                 map.put("POIName",a.getPoiName());
                 map.put("AOIName",a.getAoiName());
 
+                map.put("bearing",a.getBearing());
+                map.put("satellites",a.getSatellites());
+
             }
 
             map.put("code", a.getErrorCode());

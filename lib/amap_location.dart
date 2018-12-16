@@ -54,6 +54,8 @@ class AMapLocation {
   final String number;
   final String POIName;
   final String AOIName;
+  final double bearing;
+  final int satellites;
 
 //    这个参数很重要，在anroid和ios下的判断标准不一样
 //    android下: 0  定位成功。
@@ -121,6 +123,8 @@ class AMapLocation {
       this.province,
       this.street,
       this.locationType,
+      this.bearing,
+      this.satellites,
       this.success});
 
   static AMapLocation fromMap(dynamic map) {
@@ -146,6 +150,8 @@ class AMapLocation {
         province: map["province"],
         street: map["street"],
         locationType: map["locationType"],
+        bearing: map['bearing'],
+        satellites: map['satellites'],
         success: map["success"]);
   }
 
