@@ -218,6 +218,7 @@ static NSDictionary* DesiredAccuracy = @{@"kCLLocationAccuracyBest":@(kCLLocatio
              @"accuracy": @((location.horizontalAccuracy + location.verticalAccuracy)/2),
              @"altitude": @(location.altitude),
              @"speed": @(location.speed),
+             @"bearing": @(location.course),
              @"timestamp": @(location.timestamp.timeIntervalSince1970),};
     
 }
