@@ -33,6 +33,8 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
     //备份至
     private boolean onceLocation;
 
+    private boolean isConvertToWGS84;
+
     public AmapLocationPlugin(Registrar registrar, MethodChannel channel) {
         this.registrar = registrar;
         this.channel = channel;
@@ -136,8 +138,7 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
                 map.put("altitude", a.getAltitude());
                 map.put("speed", a.getSpeed());
                 map.put("timestamp", (double) a.getTime() / 1000);
-                map.put("latitude", a.getLatitude());
-                map.put("longitude", a.getLongitude());
+
                 map.put("locationType", a.getLocationType());
                 map.put("provider",a.getProvider());
 
@@ -156,6 +157,14 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
 
                 map.put("bearing",a.getBearing());
                 map.put("satellites",a.getSatellites());
+                if (isConvertToWGS84) {
+                    double[] latlon = AmapUtil.gcj02_To_Gps84(a.getLatitude(),a.getLongitude());
+                    map.put("latitude", latlon[0]);
+                    map.put("longitude", latlon[1]);
+                }else{
+                    map.put("latitude", a.getLatitude());
+                    map.put("longitude", a.getLongitude());
+                }
 
             }
 
@@ -294,6 +303,7 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
         option.setWifiScan((Boolean) arguments.get("wifiScan")); //可选，设置是否开启wifi扫描。默认为true，如果设置为false会同时停止主动刷新，停止以后完全依赖于系统刷新，定位位置可能存在误差
         option.setLocationCacheEnable((Boolean) arguments.get("locationCacheEnable")); //可选，设置是否使用缓存定位，默认为true
         option.setGeoLanguage(AMapLocationClientOption.GeoLanguage.valueOf((String) arguments.get("geoLanguage")));//可选，设置逆地理信息的语言，默认值为默认语言（根据所在地区选择语言）
+        isConvertToWGS84 = (Boolean) arguments.get("isConvertToWGS84");
 
     }
 

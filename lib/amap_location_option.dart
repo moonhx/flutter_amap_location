@@ -98,6 +98,9 @@ class AMapLocationOption {
 
   static final double kCLDistanceFilterNone = -1.0;
 
+  /// covert to Coordinate to WGS84
+  final bool isConvertToWGS84;
+
   ////////////////////////////////////////////////////////////
   /// 以下为通用属性
   ////////////////////////////////////////////////////////////
@@ -126,6 +129,7 @@ class AMapLocationOption {
     this.detectRiskOfFakeLocation: false,
     this.distanceFilter: -1.0,
     this.geoLanguage: GeoLanguage.DEFAULT,
+    this.isConvertToWGS84: true,
   });
 
   String getLocationProtocal() {
@@ -189,7 +193,8 @@ class AMapLocationOption {
         "sensorEnable": sensorEnable,
         "wifiScan": wifiScan,
         "locationCacheEnable": locationCacheEnable,
-        "geoLanguage": getGeoLanguage()
+        "geoLanguage": getGeoLanguage(),
+        "isConvertToWGS84": isConvertToWGS84,
       };
     } else {
       return {
@@ -202,7 +207,8 @@ class AMapLocationOption {
         "reGeocodeTimeout": reGeocodeTimeout,
         "detectRiskOfFakeLocation": detectRiskOfFakeLocation,
         "distanceFilter": distanceFilter,
-        "geoLanguage": getGeoLanguage()
+        "geoLanguage": getGeoLanguage(),
+        "isConvertToWGS84": isConvertToWGS84,
       };
     }
   }
