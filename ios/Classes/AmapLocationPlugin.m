@@ -43,6 +43,8 @@ static NSDictionary* DesiredAccuracy = @{@"kCLLocationAccuracyBest":@(kCLLocatio
 
 @end
 
+static BOOL isConvertToWGS84;
+
 @implementation AmapLocationPlugin
 
 + (double)transformLat:(double)x bdLon:(double)y
@@ -188,6 +190,8 @@ static NSDictionary* DesiredAccuracy = @{@"kCLLocationAccuracyBest":@(kCLLocatio
         ///检测是否存在虚拟定位风险，默认为NO，不检测。 \n注意:设置为YES时，单次定位通过 AMapLocatingCompletionBlock 的error给出虚拟定位风险提示；连续定位通过 amapLocationManager:didFailWithError: 方法的error给出虚拟定位风险提示。error格式为error.domain==AMapLocationErrorDomain; error.code==AMapLocationErrorRiskOfFakeLocation;
         [self.locationManager setDetectRiskOfFakeLocation: [args[@"detectRiskOfFakeLocation"] boolValue ]];
         
+        //设置是否转换坐标
+        isConvertToWGS84 = [args[@"isConvertToWGS84"] boolValue];
         return YES;
 
     }
@@ -288,10 +292,13 @@ static NSDictionary* DesiredAccuracy = @{@"kCLLocationAccuracyBest":@(kCLLocatio
 
 +(NSDictionary*)location2map:(CLLocation *)location{
     
-    CLLocationCoordinate2D pt;
-    pt.latitude =location.coordinate.latitude;
-    pt.longitude =location.coordinate.longitude;
-    CLLocationCoordinate2D  wpt = [self gcj02ToWgs84:pt];
+    CLLocationCoordinate2D wpt;
+    wpt.latitude =location.coordinate.latitude;
+    wpt.longitude =location.coordinate.longitude;
+    if (isConvertToWGS84){
+        wpt = [self gcj02ToWgs84:wpt];
+    }
+    
     return @{@"latitude": @(wpt.latitude),
              @"longitude": @(wpt.longitude),
              @"accuracy": @((location.horizontalAccuracy + location.verticalAccuracy)/2),
