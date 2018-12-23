@@ -298,7 +298,6 @@ static BOOL isConvertToWGS84;
     if (isConvertToWGS84){
         wpt = [self gcj02ToWgs84:wpt];
     }
-    
     return @{@"latitude": @(wpt.latitude),
              @"longitude": @(wpt.longitude),
              @"accuracy": @((location.horizontalAccuracy + location.verticalAccuracy)/2),
