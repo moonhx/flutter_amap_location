@@ -383,6 +383,7 @@ static BOOL isConvertToWGS84;
 */
 - (void)amapLocationManager:(AMapLocationManager *)manager didUpdateHeading:(CLHeading *)newHeading{
 
+    print(newHeading.magneticHeading);
     if(newHeading.headingAccuracy>0){
         CLLocationDirection heading;
         heading = newHeading.trueHeading > 0 ? newHeading.trueHeading : newHeading.magneticHeading;
