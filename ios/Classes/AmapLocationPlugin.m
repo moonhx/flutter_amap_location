@@ -139,6 +139,12 @@ static BOOL isConvertToWGS84;
         [AMapServices sharedServices].apiKey = call.arguments;
 
         result(@YES);
+    } else if([@"satrtHeading" isEqualToString:method]){
+        //开始监听方向变化
+        result(@([self startHeading]));
+    } else if([@"stopHeading" isEqualToString:method]){
+        //开始监听方向变化
+        result(@([self stopHeading]));
     } else {
         result(FlutterMethodNotImplemented);
     }
@@ -209,6 +215,22 @@ static BOOL isConvertToWGS84;
 -(BOOL)stopLocation{
     if(self.locationManager){
         [self.locationManager stopUpdatingLocation];
+        return YES;
+    }
+    return NO;
+}
+
+-(BOOL)startHeading{
+    if(self.locationManager){
+        [self.locationManager startUpdatingHeading];
+        return YES;
+    }
+    return NO;
+}
+
+-(BOOL)stopHeading{
+    if(self.locationManager){
+        [self.locationManager stopUpdatingHeading];
         return YES;
     }
     return NO;
@@ -324,6 +346,7 @@ static BOOL isConvertToWGS84;
     if(self.locationManager){
         //停止定位
         [self.locationManager stopUpdatingLocation];
+        [self.locationManager stopUpdatingHeading];
         [self.locationManager setDelegate:nil];
         self.locationManager = nil;
         
@@ -350,6 +373,29 @@ static BOOL isConvertToWGS84;
     [self.channel invokeMethod:@"updateLocation" arguments:md];
     
 }
+
++(NSDictionary*)heading2map:(CLLocationDirection )newHeading{
+    return @{@"heading":@(newHeading)};
+}
+
+/**
+*
+*/
+- (void)amapLocationManager:(AMapLocationManager *)manager didUpdateHeading:(CLHeading *)newHeading{
+
+    if(newHeading.headingAccuracy>0){
+        CLLocationDirection heading;
+        heading = newHeading.trueHeading > 0 ? newHeading.trueHeading : newHeading.magneticHeading;
+        
+        NSMutableDictionary* md = [[NSMutableDictionary alloc]initWithDictionary: [AmapLocationPlugin heading2map:heading] ];
+
+        md[@"success"]=@YES;
+
+        [self.channel invokeMethod:@"updateHeading" arguments:md];
+    }
+
+}
+
 
 
 

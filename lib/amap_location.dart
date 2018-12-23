@@ -167,6 +167,15 @@ class AMapLocation {
   }
 }
 
+class AMapHeading {
+  final double heading;
+  AMapHeading({this.heading});
+
+  static AMapHeading fromMap(dynamic map) {
+    return new AMapHeading(heading: map["heading"]);
+  }
+}
+
 class AMapLocationClient {
   static const MethodChannel _channel = const MethodChannel('amap_location');
 
@@ -176,6 +185,13 @@ class AMapLocationClient {
   /// 定位改变监听
   static Stream<AMapLocation> get onLocationUpate =>
       _locationUpdateStreamController.stream;
+
+  static StreamController<AMapHeading> _headingUpdateStreamController =
+      new StreamController.broadcast();
+
+  /// 定位方向监听
+  static Stream<AMapHeading> get onHeadingUpate =>
+      _headingUpdateStreamController.stream;
 
   /// 设置ios的key，android可以直接在配置文件中设置
   static Future<bool> setApiKey(String key) async {
@@ -216,6 +232,16 @@ class AMapLocationClient {
     return await _channel.invokeMethod("stopLocation");
   }
 
+  /// 启动监听方向改变
+  static Future<bool> startHeading() async {
+    return await _channel.invokeMethod("satrtHeading");
+  }
+
+  /// 停止监听方向改变
+  static Future<bool> stopHeading() async {
+    return await _channel.invokeMethod("stopHeading");
+  }
+
   static Future<dynamic> handler(MethodCall call) {
     String method = call.method;
 
@@ -224,6 +250,12 @@ class AMapLocationClient {
         {
           Map args = call.arguments;
           _locationUpdateStreamController.add(AMapLocation.fromMap(args));
+        }
+        break;
+      case "updateHeading":
+        {
+          Map args = call.arguments;
+          _headingUpdateStreamController.add(AMapHeading.fromMap(args));
         }
         break;
     }
