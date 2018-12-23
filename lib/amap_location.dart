@@ -270,7 +270,7 @@ class AMapLocationClient {
     if (_onLocationChanged == null) {
       _onLocationChanged = _locationEventChannel
           .receiveBroadcastStream()
-          .map<AMapLocation>((element) => element.cast<AMapLocation>());
+          .map<AMapLocation>((element) => AMapLocation.fromMap(element));
     }
     return _onLocationChanged;
   }
