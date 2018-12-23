@@ -180,14 +180,14 @@ class AMapLocationClient {
   static const MethodChannel _channel = const MethodChannel('amap_location');
 
   static StreamController<AMapLocation> _locationUpdateStreamController =
-      new StreamController.broadcast();
+      new StreamController.broadcast(sync: true);
 
   /// 定位改变监听
   static Stream<AMapLocation> get onLocationUpate =>
       _locationUpdateStreamController.stream;
 
   static StreamController<AMapHeading> _headingUpdateStreamController =
-      new StreamController.broadcast();
+      new StreamController.broadcast(sync: true);
 
   /// 定位方向监听
   static Stream<AMapHeading> get onHeadingUpate =>
