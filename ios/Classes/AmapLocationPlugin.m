@@ -35,19 +35,39 @@ static NSDictionary* DesiredAccuracy = @{@"kCLLocationAccuracyBest":@(kCLLocatio
 #define jzEE 0.00669342162296594323
 
 
-@interface AmapLocationPlugin()<AMapLocationManagerDelegate>
+FlutterEventSink   flutterLocationEventSink;
+FlutterEventSink   flutterHeadingEventSink;
 
-@property (nonatomic, retain)  AMapLocationManager *locationManager;
-@property (nonatomic, copy) AMapLocatingCompletionBlock completionBlock;
-@property (nonatomic, weak) FlutterMethodChannel* channel;
+AMapLocationManager *locationManager;
+ AMapLocatingCompletionBlock completionBlock;
+FlutterMethodChannel* channel;
+
+@interface AmapLocationPlugin()<AMapLocationManagerDelegate>
 
 @end
 
 static BOOL isConvertToWGS84;
 
 @implementation AmapLocationPlugin
++ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
+    FlutterMethodChannel* channel = [FlutterMethodChannel
+                                     methodChannelWithName:@"amap_location"
+                                     binaryMessenger:[registrar messenger]];
+    AmapLocationPlugin* instance = [[AmapLocationPlugin alloc] init];
+    [registrar addMethodCallDelegate:instance channel:channel];
+    
+    LocationStreamHandler* locationStreamHandler = [[LocationStreamHandler alloc] init];
+    FlutterEventChannel *locationChanel = [FlutterEventChannel eventChannelWithName:@"amap_location/location" binaryMessenger:registrar.messenger];
+    
+    HeadingStreamHandler* headingStreamHandler = [[HeadingStreamHandler alloc] init];
+    FlutterEventChannel *headingChanel = [FlutterEventChannel eventChannelWithName:@"amap_location/heading" binaryMessenger:registrar.messenger];
+    
+    [locationChanel setStreamHandler:locationStreamHandler];
+    [headingChanel setStreamHandler:headingStreamHandler];
+}
 
-+ (double)transformLat:(double)x bdLon:(double)y
+
+ + (double)transformLat:(double)x bdLon:(double)y
 {
     double ret = LAT_OFFSET_0(x, y);
     ret += LAT_OFFSET_1;
@@ -101,14 +121,6 @@ static BOOL isConvertToWGS84;
     return [self gcj02Decrypt:location.latitude gjLon:location.longitude];
 }
 
-+ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-    FlutterMethodChannel* channel = [FlutterMethodChannel
-                                     methodChannelWithName:@"amap_location"
-                                     binaryMessenger:[registrar messenger]];
-    AmapLocationPlugin* instance = [[AmapLocationPlugin alloc] init];
-    instance.channel = channel;
-    [registrar addMethodCallDelegate:instance channel:channel];
-}
 
 
 
@@ -170,31 +182,31 @@ static BOOL isConvertToWGS84;
 }
 
 -(BOOL)updateOption:(NSDictionary*)args{
-    if(self.locationManager){
+    if(locationManager){
      
         //设置期望定位精度
-        [self.locationManager setDesiredAccuracy:[ self getDesiredAccuracy: args[@"desiredAccuracy"]]];
+        [locationManager setDesiredAccuracy:[ self getDesiredAccuracy: args[@"desiredAccuracy"]]];
         
         NSLog(@"%@",args);
         
-        [self.locationManager setPausesLocationUpdatesAutomatically:[args[@"pausesLocationUpdatesAutomatically"] boolValue]];
+        [locationManager setPausesLocationUpdatesAutomatically:[args[@"pausesLocationUpdatesAutomatically"] boolValue]];
         
-        [self.locationManager setDistanceFilter: [args[@"distanceFilter"] doubleValue]];
+        [locationManager setDistanceFilter: [args[@"distanceFilter"] doubleValue]];
         
         //设置在能不能再后台定位
-        [self.locationManager setAllowsBackgroundLocationUpdates:[args[@"allowsBackgroundLocationUpdates"] boolValue]];
+        [locationManager setAllowsBackgroundLocationUpdates:[args[@"allowsBackgroundLocationUpdates"] boolValue]];
         
         //设置定位超时时间
-        [self.locationManager setLocationTimeout:[args[@"locationTimeout"] integerValue]];
+        [locationManager setLocationTimeout:[args[@"locationTimeout"] integerValue]];
         
         //设置逆地理超时时间
-        [self.locationManager setReGeocodeTimeout:[args[@"reGeocodeTimeout"] integerValue]];
+        [locationManager setReGeocodeTimeout:[args[@"reGeocodeTimeout"] integerValue]];
         
         //定位是否需要逆地理信息
-        [self.locationManager setLocatingWithReGeocode:[args[@"locatingWithReGeocode"] boolValue]];
+        [locationManager setLocatingWithReGeocode:[args[@"locatingWithReGeocode"] boolValue]];
         
         ///检测是否存在虚拟定位风险，默认为NO，不检测。 \n注意:设置为YES时，单次定位通过 AMapLocatingCompletionBlock 的error给出虚拟定位风险提示；连续定位通过 amapLocationManager:didFailWithError: 方法的error给出虚拟定位风险提示。error格式为error.domain==AMapLocationErrorDomain; error.code==AMapLocationErrorRiskOfFakeLocation;
-        [self.locationManager setDetectRiskOfFakeLocation: [args[@"detectRiskOfFakeLocation"] boolValue ]];
+        [locationManager setDetectRiskOfFakeLocation: [args[@"detectRiskOfFakeLocation"] boolValue ]];
         
         //设置是否转换坐标
         isConvertToWGS84 = [args[@"isConvertToWGS84"] boolValue];
@@ -205,32 +217,32 @@ static BOOL isConvertToWGS84;
 }
 
 -(BOOL)startLocation{
-    if(self.locationManager){
-        [self.locationManager startUpdatingLocation];
+    if(locationManager){
+        [locationManager startUpdatingLocation];
         return YES;
     }
     return NO;
 }
 
 -(BOOL)stopLocation{
-    if(self.locationManager){
-        [self.locationManager stopUpdatingLocation];
+    if(locationManager){
+        [locationManager stopUpdatingLocation];
         return YES;
     }
     return NO;
 }
 
 -(BOOL)startHeading{
-    if(self.locationManager){
-        [self.locationManager startUpdatingHeading];
+    if(locationManager){
+        [locationManager startUpdatingHeading];
         return YES;
     }
     return NO;
 }
 
 -(BOOL)stopHeading{
-    if(self.locationManager){
-        [self.locationManager stopUpdatingHeading];
+    if(locationManager){
+        [locationManager stopUpdatingHeading];
         return YES;
     }
     return NO;
@@ -238,7 +250,7 @@ static BOOL isConvertToWGS84;
 
 -(void)getLocation:(BOOL)withReGeocode result:(FlutterResult)result{
     
-    self.completionBlock = ^(CLLocation *location, AMapLocationReGeocode *regeocode, NSError *error){
+    completionBlock = ^(CLLocation *location, AMapLocationReGeocode *regeocode, NSError *error){
         
         if (error != nil && error.code == AMapLocationErrorLocateFailed)
         {
@@ -287,7 +299,7 @@ static BOOL isConvertToWGS84;
         result(md);
         
     };
-    [self.locationManager requestLocationWithReGeocode:withReGeocode completionBlock:self.completionBlock];
+    [locationManager requestLocationWithReGeocode:withReGeocode completionBlock:completionBlock];
     
  //   [self.locationManager startUpdatingLocation];
 }
@@ -332,23 +344,23 @@ static BOOL isConvertToWGS84;
 
 
 -(BOOL)startup:(NSDictionary*)args{
-    if(self.locationManager)return NO;
+    if(locationManager)return NO;
     
-    self.locationManager = [[AMapLocationManager alloc] init];
+    locationManager = [[AMapLocationManager alloc] init];
     
-    [self.locationManager setDelegate:self];
+    [locationManager setDelegate:self];
 
     return [self updateOption:args];
 }
 
 
 -(BOOL)shutdown{
-    if(self.locationManager){
+    if(locationManager){
         //停止定位
-        [self.locationManager stopUpdatingLocation];
-        [self.locationManager stopUpdatingHeading];
-        [self.locationManager setDelegate:nil];
-        self.locationManager = nil;
+        [locationManager stopUpdatingLocation];
+        [locationManager stopUpdatingHeading];
+        [locationManager setDelegate:nil];
+        locationManager = nil;
         
         return YES;
     }
@@ -363,16 +375,19 @@ static BOOL isConvertToWGS84;
  */
 - (void)amapLocationManager:(AMapLocationManager *)manager didUpdateLocation:(CLLocation *)location reGeocode:(AMapLocationReGeocode *)reGeocode{
     
-    NSMutableDictionary* md = [[NSMutableDictionary alloc]initWithDictionary: [AmapLocationPlugin location2map:location]  ];
-    if(reGeocode){
-        [md addEntriesFromDictionary:[ AmapLocationPlugin regeocode2map:reGeocode ]];
-    }
+   // NSMutableDictionary* md = [[NSMutableDictionary alloc]initWithDictionary: [AmapLocationPlugin location2map:location]  ];
+//    if(reGeocode){
+//        [md addEntriesFromDictionary:[ AmapLocationPlugin regeocode2map:reGeocode ]];
+//    }
+//
+//    md[@"success"]=@YES;
+//
+//    [self.channel invokeMethod:@"updateLocation" arguments:md];
     
-    md[@"success"]=@YES;
-    
-    [self.channel invokeMethod:@"updateLocation" arguments:md];
+    flutterLocationEventSink([AmapLocationPlugin location2map:location]);
     
 }
+
 
 +(NSDictionary*)heading2map:(CLLocationDirection )newHeading{
     return @{@"heading":@(newHeading)};
@@ -388,11 +403,13 @@ static BOOL isConvertToWGS84;
         CLLocationDirection heading;
         heading = newHeading.trueHeading > 0 ? newHeading.trueHeading : newHeading.magneticHeading;
         
-        NSMutableDictionary* md = [[NSMutableDictionary alloc]initWithDictionary: [AmapLocationPlugin heading2map:heading] ];
-
-        md[@"success"]=@YES;
-
-        [self.channel invokeMethod:@"updateHeading" arguments:md];
+//        NSMutableDictionary* md = [[NSMutableDictionary alloc]initWithDictionary: [AmapLocationPlugin heading2map:heading] ];
+//
+//        md[@"success"]=@YES;
+//
+//        [channel invokeMethod:@"updateHeading" arguments:md];
+        
+        flutterHeadingEventSink([AmapLocationPlugin heading2map:heading]);
     }
 
 }
@@ -421,10 +438,32 @@ static BOOL isConvertToWGS84;
 
     
     
-    [self.channel invokeMethod:@"updateLocation" arguments:@{ @"code":@(error.code),@"description":error.localizedDescription,@"success":@NO }];
+    [channel invokeMethod:@"updateLocation" arguments:@{ @"code":@(error.code),@"description":error.localizedDescription,@"success":@NO }];
 
     
 
     
+}
+@end
+
+@implementation LocationStreamHandler
+-(FlutterError*)onListenWithArguments:(id)arguments eventSink:(FlutterEventSink)events {
+    flutterLocationEventSink = events;
+    return nil;
+}
+
+-(FlutterError*)onCancelWithArguments:(id)arguments {
+    return nil;
+}
+@end
+
+@implementation HeadingStreamHandler
+-(FlutterError*)onListenWithArguments:(id)arguments eventSink:(FlutterEventSink)events {
+    flutterHeadingEventSink = events;
+    return nil;
+}
+
+-(FlutterError*)onCancelWithArguments:(id)arguments {
+    return nil;
 }
 @end

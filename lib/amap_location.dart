@@ -176,18 +176,22 @@ class AMapHeading {
   }
 }
 
+const EventChannel _locationEventChannel =
+    EventChannel('amap_location/location');
+
 class AMapLocationClient {
   static const MethodChannel _channel = const MethodChannel('amap_location');
 
-  static StreamController<AMapLocation> _locationUpdateStreamController =
-      new StreamController.broadcast(sync: true);
+  // static StreamController<AMapLocation> _locationUpdateStreamController =
+  //     new StreamController.broadcast();
 
-  /// 定位改变监听
-  static Stream<AMapLocation> get onLocationUpate =>
-      _locationUpdateStreamController.stream;
+  // /// 定位改变监听
+  // static Stream<AMapLocation> get onLocationUpate =>
+  //     _locationUpdateStreamController.stream;
+  static Stream<AMapLocation> _onLocationChanged;
 
   static StreamController<AMapHeading> _headingUpdateStreamController =
-      new StreamController.broadcast(sync: true);
+      new StreamController.broadcast();
 
   /// 定位方向监听
   static Stream<AMapHeading> get onHeadingUpate =>
@@ -209,7 +213,7 @@ class AMapLocationClient {
   /// 启动系统
   /// @param options 启动系统所需选项
   static Future<bool> startup(AMapLocationOption option) async {
-    _channel.setMethodCallHandler(handler);
+    //_channel.setMethodCallHandler(handler);
     return await _channel.invokeMethod("startup", option.toMap());
   }
 
@@ -237,28 +241,37 @@ class AMapLocationClient {
     return await _channel.invokeMethod("satrtHeading");
   }
 
-  /// 停止监听方向改变
+  /// 停止监听方���改变
   static Future<bool> stopHeading() async {
     return await _channel.invokeMethod("stopHeading");
   }
 
-  static Future<dynamic> handler(MethodCall call) {
-    String method = call.method;
+  // static Future<dynamic> handler(MethodCall call) {
+  //   String method = call.method;
 
-    switch (method) {
-      case "updateLocation":
-        {
-          Map args = call.arguments;
-          _locationUpdateStreamController.add(AMapLocation.fromMap(args));
-        }
-        break;
-      case "updateHeading":
-        {
-          Map args = call.arguments;
-          _headingUpdateStreamController.add(AMapHeading.fromMap(args));
-        }
-        break;
+  //   switch (method) {
+  //     case "updateLocation":
+  //       {
+  //         Map args = call.arguments;
+  //         _locationUpdateStreamController.add(AMapLocation.fromMap(args));
+  //       }
+  //       break;
+  //     case "updateHeading":
+  //       {
+  //         Map args = call.arguments;
+  //         _headingUpdateStreamController.add(AMapHeading.fromMap(args));
+  //       }
+  //       break;
+  //   }
+  //   return new Future.value("");
+  // }
+
+  static Stream<AMapLocation> onLocationChanged() {
+    if (_onLocationChanged == null) {
+      _onLocationChanged = _locationEventChannel
+          .receiveBroadcastStream()
+          .map<AMapLocation>((element) => element.cast<AMapLocation>());
     }
-    return new Future.value("");
+    return _onLocationChanged;
   }
 }
