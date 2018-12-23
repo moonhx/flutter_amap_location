@@ -2,7 +2,6 @@ package com.jzoom.amaplocation;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 import com.amap.api.location.AMapLocation;
@@ -18,9 +17,6 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
-import android.location.GpsSatellite;
-import android.location.GpsStatus;
-import android.location.LocationManager;
 
 /**
  * FlutterAmapLocationPlugin
@@ -37,7 +33,6 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
     private boolean onceLocation;
 
     private boolean isConvertToWGS84;
-    private static int satellites;
 
     public AmapLocationPlugin(Registrar registrar, MethodChannel channel) {
         this.registrar = registrar;
@@ -160,7 +155,7 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
                 map.put("AOIName",a.getAoiName());
 
                 map.put("bearing",a.getBearing());
-                map.put("satellites",satellites);
+                map.put("satellites",a.getSatellites());
                 if (isConvertToWGS84) {
                     double[] latlon = AmapUtil.gcj02_To_Gps84(a.getLatitude(),a.getLongitude());
                     map.put("latitude", latlon[0]);
@@ -320,28 +315,5 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
             Map<String,Object> data = new HashMap<>();
             channel.invokeMethod("updateLocation",resultToMap(aMapLocation));
         }
-    }
-
-    /**
-     * 卫星状态监听器
-     */
-
-    private final GpsStatus.Listener statusListener = new GpsStatus.Listener() {
-        public void onGpsStatusChanged(int event) { // GPS状态变化时的回调，如卫星数
-            int satellites = 0;
-            LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-            for (GpsSatellite sat : locationManager.getGpsStatus(null).getSatellites()) {
-                satellites++;
-            }
-            setSatellites(satellites);
-        }
-    };
-
-    public static int getSatellites() {
-        return satellites;
-    }
-
-    public static void setSatellites(int satellites) {
-        AmapLocationPlugin.satellites = satellites;
     }
 }
