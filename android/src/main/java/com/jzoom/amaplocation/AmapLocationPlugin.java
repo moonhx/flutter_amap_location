@@ -17,12 +17,12 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
+import io.flutter.plugin.common.EventChannel;
 
 /**
  * FlutterAmapLocationPlugin
  */
-public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListener {
-
+public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListener,EventChannel.StreamHandler {
 
     private Registrar registrar;
     private MethodChannel channel;
@@ -34,10 +34,18 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
 
     private boolean isConvertToWGS84;
 
+    private String eventType;
+
     public AmapLocationPlugin(Registrar registrar, MethodChannel channel) {
         this.registrar = registrar;
         this.channel = channel;
     }
+
+    public AmapLocationPlugin(Registrar registrar,String type) {
+        this.registrar = registrar;
+        this.eventType = type;
+    }
+
 
     private Activity getActivity(){
         return registrar.activity();
@@ -53,6 +61,11 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
     public static void registerWith(Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "amap_location");
         channel.setMethodCallHandler(new AmapLocationPlugin(registrar,channel));
+
+        final EventChannel locationEventChannel =
+                new EventChannel(registrar.messenger(), "amap_location/location");
+        locationEventChannel.setStreamHandler(new AmapLocationPlugin(registrar,"location"));
+
     }
 
     @Override
@@ -315,5 +328,15 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
             Map<String,Object> data = new HashMap<>();
             channel.invokeMethod("updateLocation",resultToMap(aMapLocation));
         }
+    }
+
+    @Override
+    public void onListen(Object o, EventChannel.EventSink eventSink) {
+
+    }
+
+    @Override
+    public void onCancel(Object o) {
+
     }
 }

@@ -210,7 +210,7 @@ class AMapLocationClient {
   /// 启动系统
   /// @param options 启动系统所需选项
   static Future<bool> startup(AMapLocationOption option) async {
-    //_channel.setMethodCallHandler(handler);
+    _channel.setMethodCallHandler(handler);
     return await _channel.invokeMethod("startup", option.toMap());
   }
 
