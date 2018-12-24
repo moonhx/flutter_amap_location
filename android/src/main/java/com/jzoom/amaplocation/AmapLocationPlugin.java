@@ -329,6 +329,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
         locationListener = new AMapLocationListener(){
             @Override
             public void onLocationChanged(AMapLocation aMapLocation) {
+                Log.d(TAG, "onLocationChanged: la"+aMapLocation.getLatitude());
                 synchronized (this){
                     eventSink.success(resultToMap(aMapLocation));
                 }
