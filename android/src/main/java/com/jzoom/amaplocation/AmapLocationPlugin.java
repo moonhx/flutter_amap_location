@@ -22,12 +22,13 @@ import io.flutter.plugin.common.EventChannel;
 /**
  * FlutterAmapLocationPlugin
  */
-public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListener,EventChannel.StreamHandler {
+public class AmapLocationPlugin implements MethodCallHandler,EventChannel.StreamHandler {
 
     private Registrar registrar;
     private MethodChannel channel;
     private AMapLocationClientOption option;
     private AMapLocationClient locationClient;
+    private AMapLocationListener locationListener;
     private boolean isLocation;
     //备份至
     private boolean onceLocation;
@@ -86,7 +87,8 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
             this.getLocation(needsAddress,result);
         } else if("startLocation".equals(method)){
             //启动定位,如果还没有启动，那么返回false
-            result.success(this.startLocation(this));
+            //result.success(this.startLocation(this));
+            result.success(false);
         } else if("stopLocation".equals(method)){
             //停止定位
             result.success(this.stopLocation());
@@ -320,23 +322,23 @@ public class AmapLocationPlugin implements MethodCallHandler, AMapLocationListen
     }
 
 
-    @Override
-    public void onLocationChanged(AMapLocation aMapLocation) {
 
-        synchronized (this){
-            if(channel==null)return;
-            Map<String,Object> data = new HashMap<>();
-            channel.invokeMethod("updateLocation",resultToMap(aMapLocation));
-        }
-    }
 
     @Override
-    public void onListen(Object o, EventChannel.EventSink eventSink) {
-
+    public void onListen(Object o, final EventChannel.EventSink eventSink) {
+        locationListener = new AMapLocationListener(){
+            @Override
+            public void onLocationChanged(AMapLocation aMapLocation) {
+                synchronized (this){
+                    eventSink.success(resultToMap(aMapLocation));
+                }
+            }
+        };
+        this.startLocation(locationListener);
     }
 
     @Override
     public void onCancel(Object o) {
-
+        this.stopLocation();
     }
 }

@@ -184,12 +184,6 @@ const EventChannel _headingEventChannel = EventChannel('amap_location/heading');
 class AMapLocationClient {
   static const MethodChannel _channel = const MethodChannel('amap_location');
 
-  static StreamController<AMapLocation> _locationUpdateStreamController =
-      new StreamController.broadcast();
-
-  /// 定位改变监听
-  static Stream<AMapLocation> get onLocationUpate =>
-      _locationUpdateStreamController.stream;
   static Stream<AMapLocation> _onLocationChanged;
 
   static Stream<AMapHeading> _onHeadingChanged;
@@ -210,7 +204,7 @@ class AMapLocationClient {
   /// 启动系统
   /// @param options 启动系统所需选项
   static Future<bool> startup(AMapLocationOption option) async {
-    _channel.setMethodCallHandler(handler);
+    //_channel.setMethodCallHandler(handler);
     return await _channel.invokeMethod("startup", option.toMap());
   }
 
@@ -259,19 +253,5 @@ class AMapLocationClient {
           .map<AMapHeading>((element) => AMapHeading.fromMap(element));
     }
     return _onHeadingChanged;
-  }
-
-  static Future<dynamic> handler(MethodCall call) {
-    String method = call.method;
-
-    switch (method) {
-      case "updateLocation":
-        {
-          Map args = call.arguments;
-          _locationUpdateStreamController.add(AMapLocation.fromMap(args));
-        }
-        break;
-    }
-    return new Future.value("");
   }
 }
