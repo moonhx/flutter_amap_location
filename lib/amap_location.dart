@@ -238,7 +238,7 @@ class AMapLocationClient {
     return await _channel.invokeMethod("satrtHeading");
   }
 
-  /// 停止监听方���改变
+  /// 停止监听方位改变
   static Future<bool> stopHeading() async {
     return await _channel.invokeMethod("stopHeading");
   }

@@ -398,7 +398,7 @@ static BOOL isConvertToWGS84;
 */
 - (void)amapLocationManager:(AMapLocationManager *)manager didUpdateHeading:(CLHeading *)newHeading{
 
-    NSLog(@"%@", @(newHeading.headingAccuracy));
+    //NSLog(@"%@", @(newHeading.headingAccuracy));
     if(newHeading.headingAccuracy>0){
         CLLocationDirection heading;
         heading = newHeading.trueHeading > 0 ? newHeading.trueHeading : newHeading.magneticHeading;
@@ -408,7 +408,7 @@ static BOOL isConvertToWGS84;
 //        md[@"success"]=@YES;
 //
 //        [channel invokeMethod:@"updateHeading" arguments:md];
-        NSLog(@"%@", @(heading));
+        //NSLog(@"%@", @(heading));
         flutterHeadingEventSink([AmapLocationPlugin heading2map:heading]);
     }
 
