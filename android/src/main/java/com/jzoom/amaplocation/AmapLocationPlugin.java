@@ -22,7 +22,7 @@ import io.flutter.plugin.common.EventChannel;
 /**
  * FlutterAmapLocationPlugin
  */
-public class AmapLocationPlugin implements MethodCallHandler,EventChannel.StreamHandler {
+public class AmapLocationPlugin implements MethodCallHandler,EventChannel.StreamHandler,AMapLocationListener {
 
     private Registrar registrar;
     private MethodChannel channel;
@@ -37,16 +37,12 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     private String eventType;
 
+    private static EventChannel.EventSink events;
+
     public AmapLocationPlugin(Registrar registrar, MethodChannel channel) {
         this.registrar = registrar;
         this.channel = channel;
     }
-
-    public AmapLocationPlugin(Registrar registrar,String type) {
-        this.registrar = registrar;
-        this.eventType = type;
-    }
-
 
     private Activity getActivity(){
         return registrar.activity();
@@ -65,7 +61,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
         final EventChannel locationEventChannel =
                 new EventChannel(registrar.messenger(), "amap_location/location");
-        locationEventChannel.setStreamHandler(new AmapLocationPlugin(registrar,"location"));
+        locationEventChannel.setStreamHandler(new AmapLocationPlugin(registrar,channel));
 
     }
 
@@ -87,8 +83,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
             this.getLocation(needsAddress,result);
         } else if("startLocation".equals(method)){
             //启动定位,如果还没有启动，那么返回false
-            //result.success(this.startLocation(this));
-            result.success(false);
+            result.success(this.startLocation(this));
         } else if("stopLocation".equals(method)){
             //停止定位
             result.success(this.stopLocation());
@@ -184,13 +179,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
             map.put("code", a.getErrorCode());
 
-            Log.d(TAG,"定位获取结果:"+a.getLatitude() + " code："+a.getErrorCode() + " 省:"+a.getProvince());
-
-
-
-
-
-
+            Log.d(TAG,"定位获取结果===:"+a.getLatitude() + " code："+a.getErrorCode() + " 省:"+a.getProvince());
         }
 
         return map;
@@ -326,20 +315,24 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     @Override
     public void onListen(Object o, final EventChannel.EventSink eventSink) {
-        locationListener = new AMapLocationListener(){
-            @Override
-            public void onLocationChanged(AMapLocation aMapLocation) {
-                Log.d(TAG, "onLocationChanged: la"+aMapLocation.getLatitude());
-                synchronized (this){
-                    eventSink.success(resultToMap(aMapLocation));
-                }
-            }
-        };
-        this.startLocation(locationListener);
+        
+        events = eventSink;
+        Log.d(TAG, "onListen: test");
     }
 
     @Override
     public void onCancel(Object o) {
         this.stopLocation();
+        events = null;
+    }
+
+    @Override
+    public void onLocationChanged(AMapLocation aMapLocation) {
+
+        synchronized (this){
+            if(events==null)return;
+            events.success(resultToMap(aMapLocation));
+            Log.d(TAG, "onLocationChanged: events.size===================="+events.toString());
+        }
     }
 }
