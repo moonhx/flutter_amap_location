@@ -61,9 +61,6 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
     public AmapLocationPlugin(Registrar registrar, MethodChannel channel,boolean isSensor) {
         this.registrar = registrar;
         Context context = getApplicationContext();
-        sensorManager = (SensorManager) context.getSystemService(context.SENSOR_SERVICE);
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        sensorEventListener = createSensorEventListener();
     }
 
     private Activity getActivity(){
@@ -270,10 +267,11 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     private boolean startHeading(){
         synchronized (this){
-            Log.d(TAG, "startHeading: ");
             if(sensorManager==null){
-                Log.d(TAG, "sensorManager: null");
-                return false;
+                Context context = getApplicationContext();
+                sensorManager = (SensorManager) context.getSystemService(context.SENSOR_SERVICE);
+                sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+                sensorEventListener = createSensorEventListener();
             }
             Log.d(TAG, "sensorEventListener: "+sensorEventListener==null?"null":"not null");
 
