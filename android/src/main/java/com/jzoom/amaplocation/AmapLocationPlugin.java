@@ -50,6 +50,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
     private double mAzimuth = 0.0;
     private double newAzimuth = 0.0;
     private float mFilter = 1f;
+    private boolean isSensor;
 
 
 
@@ -60,7 +61,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     public AmapLocationPlugin(Registrar registrar, MethodChannel channel,boolean isSensor) {
         this.registrar = registrar;
-        Context context = getApplicationContext();
+        this.isSensor = isSensor;
     }
 
     private Activity getActivity(){
@@ -271,12 +272,8 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
                 Context context = getApplicationContext();
                 sensorManager = (SensorManager) context.getSystemService(context.SENSOR_SERVICE);
                 sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-                sensorEventListener = createSensorEventListener();
-            }
-            Log.d(TAG, "sensorEventListener: "+sensorEventListener==null?"null":"not null");
 
-            sensorManager.registerListener(sensorEventListener, sensor, sensorManager.SENSOR_DELAY_NORMAL);
-            Log.d(TAG, "startHeading: done");
+            }
             return true;
         }
 
@@ -375,7 +372,12 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     @Override
     public void onListen(Object o, final EventChannel.EventSink eventSink) {
-        events = eventSink;
+        if(this.isSensor){
+            sensorEventListener = createSensorEventListener(eventSink);
+            sensorManager.registerListener(sensorEventListener, sensor, sensorManager.SENSOR_DELAY_NORMAL);
+        }else{
+            events = eventSink;
+        }
     }
 
     @Override
@@ -395,7 +397,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
         }
     }
 
-    SensorEventListener createSensorEventListener() {
+    SensorEventListener createSensorEventListener( EventChannel.EventSink events) {
         return new SensorEventListener() {
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {}
