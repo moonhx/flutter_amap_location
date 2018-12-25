@@ -373,6 +373,12 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
     @Override
     public void onListen(Object o, final EventChannel.EventSink eventSink) {
         if(this.isSensor){
+            if(sensorManager==null){
+                Context context = getApplicationContext();
+                sensorManager = (SensorManager) context.getSystemService(context.SENSOR_SERVICE);
+                sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+
+            }
             sensorEventListener = createSensorEventListener(eventSink);
             sensorManager.registerListener(sensorEventListener, sensor, sensorManager.SENSOR_DELAY_NORMAL);
         }else{
