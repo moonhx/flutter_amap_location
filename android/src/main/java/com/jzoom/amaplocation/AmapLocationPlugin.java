@@ -229,9 +229,11 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
                 locationClient.stopLocation();
                 locationClient = null;
                 option = null;
-                return true;
             }
-            return false;
+            if(sensorManager !=null){
+                this.stopHeading();
+            }
+            return true;
         }
 
 
@@ -262,11 +264,12 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     private boolean startHeading(AMapLocationListener listener){
         synchronized (this){
+            Log.d(TAG, "startHeading: ");
             if(sensorManager==null){
                 return false;
             }
-
             sensorManager.registerListener(sensorEventListener, sensor, sensorManager.SENSOR_DELAY_NORMAL);
+            Log.d(TAG, "startHeading: done");
             return true;
         }
 
@@ -393,14 +396,13 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
             @Override
             public void onSensorChanged(SensorEvent event) {
 
-                double[] sensorValues = new double[event.values.length];
                 for (int i = 0; i < event.values.length; i++) {
                     Map map = new HashMap();
                     map.put("heading",event.values[i]);
                     events.success(map);
                 }
 
-                Log.d(TAG, "onLocationChanged: events.value===================="+sensorValues);
+                Log.d(TAG, "onLocationChanged: events.value====================");
             }
         };
     }
