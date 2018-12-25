@@ -44,6 +44,12 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
     private SensorEventListener sensorEventListener;
     private SensorManager sensorManager;
     private Sensor sensor;
+    private  float[] rMat = new float[9];
+
+    private float[] orientation = new float[3];
+    private double mAzimuth = 0.0;
+    private double newAzimuth = 0.0;
+    private float mFilter = 1f;
 
 
 
@@ -56,7 +62,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
         this.registrar = registrar;
         Context context = getApplicationContext();
         sensorManager = (SensorManager) context.getSystemService(context.SENSOR_SERVICE);
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         sensorEventListener = createSensorEventListener();
     }
 
@@ -396,11 +402,18 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
             @Override
             public void onSensorChanged(SensorEvent event) {
 
-                for (int i = 0; i < event.values.length; i++) {
-                    Map map = new HashMap();
-                    map.put("heading",event.values[i]);
-                    events.success(map);
+                SensorManager.getRotationMatrixFromVector(rMat,event.values);
+
+                newAzimuth = (((Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[0]) + 360) % 360 - Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[2]) + 360) % 360);
+
+                //dont react to changes smaller than the filter value
+                if (Math.abs(mAzimuth - newAzimuth) < mFilter) {
+                    return;
                 }
+                mAzimuth = newAzimuth;
+                Map map = new HashMap();
+                map.put("heading",mAzimuth);
+                events.success(map);
 
                 Log.d(TAG, "onLocationChanged: events.value====================");
             }
