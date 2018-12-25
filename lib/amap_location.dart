@@ -229,7 +229,7 @@ class AMapLocationClient {
 
   /// 启动监听方向改变
   static Future<bool> startHeading() async {
-    return await _channel.invokeMethod("satrtHeading");
+    return await _channel.invokeMethod("startHeading");
   }
 
   /// 停止监听方位改变

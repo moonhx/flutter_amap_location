@@ -151,7 +151,7 @@ static BOOL isConvertToWGS84;
         [AMapServices sharedServices].apiKey = call.arguments;
 
         result(@YES);
-    } else if([@"satrtHeading" isEqualToString:method]){
+    } else if([@"startHeading" isEqualToString:method]){
         //开始监听方向变化
         result(@([self startHeading]));
     } else if([@"stopHeading" isEqualToString:method]){
