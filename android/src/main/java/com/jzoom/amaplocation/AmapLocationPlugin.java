@@ -115,7 +115,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
             result.success(this.stopLocation());
         } else if("startHeading".equals(method)){
             //启动定位,如果还没有启动，那么返回false
-            result.success(this.startHeading(this));
+            result.success(this.startHeading());
         } else if("stopHeading".equals(method)){
             //停止定位
             result.success(this.stopHeading());
@@ -268,12 +268,15 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     }
 
-    private boolean startHeading(AMapLocationListener listener){
+    private boolean startHeading(){
         synchronized (this){
             Log.d(TAG, "startHeading: ");
             if(sensorManager==null){
+                Log.d(TAG, "sensorManager: null");
                 return false;
             }
+            Log.d(TAG, "sensorEventListener: "+sensorEventListener==null?"null":"not null");
+
             sensorManager.registerListener(sensorEventListener, sensor, sensorManager.SENSOR_DELAY_NORMAL);
             Log.d(TAG, "startHeading: done");
             return true;
