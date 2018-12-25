@@ -2,6 +2,10 @@ package com.jzoom.amaplocation;
 
 import android.app.Activity;
 import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.util.Log;
 
 import com.amap.api.location.AMapLocation;
@@ -35,13 +39,25 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     private boolean isConvertToWGS84;
 
-    private String eventType;
-
     private static EventChannel.EventSink events;
+
+    private SensorEventListener sensorEventListener;
+    private SensorManager sensorManager;
+    private Sensor sensor;
+
+
 
     public AmapLocationPlugin(Registrar registrar, MethodChannel channel) {
         this.registrar = registrar;
         this.channel = channel;
+    }
+
+    public AmapLocationPlugin(Registrar registrar, MethodChannel channel,boolean isSensor) {
+        this.registrar = registrar;
+        Context context = getApplicationContext();
+        sensorManager = (SensorManager) context.getSystemService(context.SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        sensorEventListener = createSensorEventListener();
     }
 
     private Activity getActivity(){
@@ -62,6 +78,10 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
         final EventChannel locationEventChannel =
                 new EventChannel(registrar.messenger(), "amap_location/location");
         locationEventChannel.setStreamHandler(new AmapLocationPlugin(registrar,channel));
+
+        final EventChannel headingEventChannel =
+                new EventChannel(registrar.messenger(), "amap_location/heading");
+        headingEventChannel.setStreamHandler(new AmapLocationPlugin(registrar,channel,true));
 
     }
 
@@ -87,6 +107,12 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
         } else if("stopLocation".equals(method)){
             //停止定位
             result.success(this.stopLocation());
+        } else if("startHeading".equals(method)){
+            //启动定位,如果还没有启动，那么返回false
+            result.success(this.startHeading(this));
+        } else if("stopHeading".equals(method)){
+            //停止定位
+            result.success(this.stopHeading());
         } else if("updateOption".equals(method)){
             result.success(this.updateOption((Map) call.arguments));
         } else if("setApiKey".equals(method)){
@@ -234,6 +260,30 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     }
 
+    private boolean startHeading(AMapLocationListener listener){
+        synchronized (this){
+            if(sensorManager==null){
+                return false;
+            }
+
+            sensorManager.registerListener(sensorEventListener, sensor, sensorManager.SENSOR_DELAY_NORMAL);
+            return true;
+        }
+
+    }
+
+
+    private boolean stopHeading() {
+        synchronized (this){
+            if(sensorManager==null){
+                return false;
+            }
+            sensorManager.unregisterListener(sensorEventListener);
+            return true;
+        }
+
+    }
+
     private boolean startup(Map arguments) {
         synchronized (this){
 
@@ -315,14 +365,13 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
     @Override
     public void onListen(Object o, final EventChannel.EventSink eventSink) {
-        
         events = eventSink;
-        Log.d(TAG, "onListen: test");
     }
 
     @Override
     public void onCancel(Object o) {
         this.stopLocation();
+        this.stopHeading();
         events = null;
     }
 
@@ -332,7 +381,27 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
         synchronized (this){
             if(events==null)return;
             events.success(resultToMap(aMapLocation));
-            Log.d(TAG, "onLocationChanged: events.size===================="+events.toString());
+
         }
+    }
+
+    SensorEventListener createSensorEventListener() {
+        return new SensorEventListener() {
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+
+                double[] sensorValues = new double[event.values.length];
+                for (int i = 0; i < event.values.length; i++) {
+                    Map map = new HashMap();
+                    map.put("heading",event.values[i]);
+                    events.success(map);
+                }
+
+                Log.d(TAG, "onLocationChanged: events.value===================="+sensorValues);
+            }
+        };
     }
 }
