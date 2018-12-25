@@ -397,7 +397,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
         }
     }
 
-    SensorEventListener createSensorEventListener( EventChannel.EventSink events) {
+    SensorEventListener createSensorEventListener(final EventChannel.EventSink events) {
         return new SensorEventListener() {
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {}
@@ -418,7 +418,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
                 map.put("heading",mAzimuth);
                 events.success(map);
 
-                Log.d(TAG, "onLocationChanged: events.value====================");
+                Log.d(TAG, "onLocationChanged: events.value===================="+mAzimuth);
             }
         };
     }
