@@ -416,7 +416,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
                 newAzimuth = (((Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[0]) + 360) % 360 - Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[2]) + 360) % 360);
 
                 //dont react to changes smaller than the filter value
-                if (Math.abs(mAzimuth - newAzimuth) < mFilter) {
+                if (Math.abs(mAzimuth - newAzimuth) < mFilter|| newAzimuth>0) {
                     return;
                 }
                 mAzimuth = newAzimuth;
@@ -424,7 +424,6 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
                 map.put("heading",mAzimuth);
                 events.success(map);
 
-                Log.d(TAG, "onLocationChanged: events.value===================="+mAzimuth);
             }
         };
     }
