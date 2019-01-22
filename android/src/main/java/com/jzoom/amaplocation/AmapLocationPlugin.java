@@ -209,7 +209,7 @@ public class AmapLocationPlugin implements MethodCallHandler,EventChannel.Stream
 
             map.put("code", a.getErrorCode());
 
-            Log.d(TAG,"定位获取结果===:"+a.getLatitude() + " code："+a.getErrorCode() + " 省:"+a.getProvince());
+            //Log.d(TAG,"定位获取结果===:"+a.getLatitude() + " code："+a.getErrorCode() + " 省:"+a.getProvince());
         }
 
         return map;
