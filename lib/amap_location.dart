@@ -40,8 +40,8 @@ class AMapLocation {
   final double altitude;
   final double speed;
   final double timestamp;
-  final double latitude;
-  final double longitude;
+  double latitude;
+  double longitude;
 
   final String formattedAddress;
   final String country;
